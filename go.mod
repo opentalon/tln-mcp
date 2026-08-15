@@ -2,4 +2,4 @@ module github.com/opentalon/tln-mcp
 
 go 1.25.0
 
-require github.com/opentalon/tln-language v0.8.0
+require github.com/opentalon/tln-language v0.11.0
