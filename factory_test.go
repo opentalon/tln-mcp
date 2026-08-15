@@ -24,7 +24,7 @@ func TestFactory_DispatchesWithBearer(t *testing.T) {
 		b, _ := io.ReadAll(req.Body)
 		gotBody = string(b)
 		w.Header().Set("Content-Type", "application/json")
-		io.WriteString(w, `{"jsonrpc":"2.0","id":1,"result":{"ok":true}}`)
+\t\t_, _ = io.WriteString(w, `{"jsonrpc":"2.0","id":1,"result":{"ok":true}}`)
 	}))
 	defer srv.Close()
 
@@ -57,7 +57,7 @@ func TestFactory_NoBearerOmitsHeader(t *testing.T) {
 	var gotAuth string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		gotAuth = req.Header.Get("Authorization")
-		io.WriteString(w, `{"jsonrpc":"2.0","id":1,"result":null}`)
+\t\t_, _ = io.WriteString(w, `{"jsonrpc":"2.0","id":1,"result":null}`)
 	}))
 	defer srv.Close()
 
