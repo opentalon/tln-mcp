@@ -25,6 +25,7 @@ import (
 // to one endpoint URL. It is safe for concurrent use.
 type Resolver struct {
 	servers map[string]string
+	auth    map[string]string // server → bearer token (optional)
 	client  *http.Client
 	id      atomic.Int64
 }
@@ -33,9 +34,15 @@ type Resolver struct {
 type Option func(*Resolver)
 
 // WithServer registers an MCP server name and its JSON-RPC endpoint URL. The
-// name is what a program references in `mcp "name" "tool" { … }`.
+// name is what a program references in `tool "name" "tool" { … }`.
 func WithServer(name, endpoint string) Option {
 	return func(r *Resolver) { r.servers[name] = endpoint }
+}
+
+// WithBearer attaches an `Authorization: Bearer <token>` header to every call
+// to the named server.
+func WithBearer(name, token string) Option {
+	return func(r *Resolver) { r.auth[name] = token }
 }
 
 // WithHTTPClient overrides the default HTTP client (e.g. to add auth transport
@@ -48,6 +55,7 @@ func WithHTTPClient(c *http.Client) Option {
 func New(opts ...Option) *Resolver {
 	r := &Resolver{
 		servers: map[string]string{},
+		auth:    map[string]string{},
 		client:  &http.Client{Timeout: 30 * time.Second},
 	}
 	for _, opt := range opts {
@@ -111,6 +119,9 @@ func (r *Resolver) Call(ctx context.Context, server, tool string, args map[strin
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	if token := r.auth[server]; token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
 
 	resp, err := r.client.Do(req)
 	if err != nil {
