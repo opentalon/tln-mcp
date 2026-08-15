@@ -17,35 +17,30 @@ language + planner + SPIs, and every IO edge is a plugin.
 
 ## Usage
 
-```go
-import (
-    "github.com/opentalon/tln-language/pkg/tln"
-    tlnmcp "github.com/opentalon/tln-mcp"
-)
-
-r := tlnmcp.New(
-    tlnmcp.WithServer("inventory", "https://mcp.example.com/rpc"),
-    tlnmcp.WithServer("slack", "https://slack-mcp.example.com/rpc"),
-)
-
-result, err := tln.Run(ctx, program, tln.WithToolResolver(r))
-```
-
-A program's `tool "inventory" "list_items" { … }` steps (and `collect` /
-`enrich` / `remediate`) then dispatch to the named MCP server via JSON-RPC
-`tools/call`. The tool-call verb is the plugin-neutral **`tool`** ([ADR 0012](https://github.com/opentalon/tln-language/blob/master/docs/design/0012-tool-verb-and-connectors.md)) — `mcp` is no longer a keyword; the server name (here `"inventory"`) routes to this resolver.
-
-Instead of wiring servers in Go, a program can define them in tln with a
-`connector`, so it runs with no host — endpoints and credentials come from the
-environment, never inlined:
+Define your MCP servers with a `connector` and call their tools with `tool` — all in tln. Endpoints and credentials come from the environment, never inlined:
 
 ```tln
 connector "inventory" via mcp {
   endpoint env "INVENTORY_ENDPOINT"
-  auth bearer env "INVENTORY_TOKEN"
+  bearer env "INVENTORY_TOKEN"
 }
-tool "inventory" "list_items" { query "status:defective" }
+
+connector "slack" via mcp {
+  endpoint env "SLACK_MCP_ENDPOINT"
+  bearer env "SLACK_TOKEN"
+}
+
+detect "Low stock" {
+  for records where type == "stock_item" and attr "qty" < 10
+  flag matching items
+  remediate {
+    tool "inventory" "list_items" { query "status:defective" }
+    tool "slack" "notify" { channel "ops" text "low stock: {item.id}" }
+  }
+}
 ```
+
+The tool-call verb is the plugin-neutral **`tool`** ([ADR 0012](https://github.com/opentalon/tln-language/blob/master/docs/design/0012-tool-verb-and-connectors.md)) — `mcp` is not a keyword; a server name (`"inventory"`) routes to this resolver, which performs the call over JSON-RPC `tools/call`. `tool` steps in `collect` / `enrich` / `remediate` dispatch the same way.
 
 ## Status
 
