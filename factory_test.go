@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	tlnmcp "github.com/opentalon/tln-mcp"
 	"github.com/opentalon/tln-language/pkg/tln"
+	tlnmcp "github.com/opentalon/tln-mcp"
 )
 
 func TestFactory_SatisfiesPluginFactory(t *testing.T) {
@@ -24,7 +24,7 @@ func TestFactory_DispatchesWithBearer(t *testing.T) {
 		b, _ := io.ReadAll(req.Body)
 		gotBody = string(b)
 		w.Header().Set("Content-Type", "application/json")
-\t\t_, _ = io.WriteString(w, `{"jsonrpc":"2.0","id":1,"result":{"ok":true}}`)
+		_, _ = io.WriteString(w, `{"jsonrpc":"2.0","id":1,"result":{"ok":true}}`)
 	}))
 	defer srv.Close()
 
@@ -57,7 +57,7 @@ func TestFactory_NoBearerOmitsHeader(t *testing.T) {
 	var gotAuth string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		gotAuth = req.Header.Get("Authorization")
-\t\t_, _ = io.WriteString(w, `{"jsonrpc":"2.0","id":1,"result":null}`)
+		_, _ = io.WriteString(w, `{"jsonrpc":"2.0","id":1,"result":null}`)
 	}))
 	defer srv.Close()
 
