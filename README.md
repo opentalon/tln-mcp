@@ -31,9 +31,21 @@ r := tlnmcp.New(
 result, err := tln.Run(ctx, program, tln.WithToolResolver(r))
 ```
 
-A program's `mcp "inventory" "list_items" { … }` steps (and `collect` /
+A program's `tool "inventory" "list_items" { … }` steps (and `collect` /
 `enrich` / `remediate`) then dispatch to the named MCP server via JSON-RPC
-`tools/call`.
+`tools/call`. The tool-call verb is the plugin-neutral **`tool`** ([ADR 0012](https://github.com/opentalon/tln-language/blob/master/docs/design/0012-tool-verb-and-connectors.md)) — `mcp` is no longer a keyword; the server name (here `"inventory"`) routes to this resolver.
+
+Instead of wiring servers in Go, a program can define them in tln with a
+`connector`, so it runs with no host — endpoints and credentials come from the
+environment, never inlined:
+
+```tln
+connector "inventory" via mcp {
+  endpoint env "INVENTORY_ENDPOINT"
+  auth bearer env "INVENTORY_TOKEN"
+}
+tool "inventory" "list_items" { query "status:defective" }
+```
 
 ## Status
 
